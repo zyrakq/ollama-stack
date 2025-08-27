@@ -2,19 +2,19 @@ services:
   ollama:
     container_name: ollama
     image: ollama/ollama
+    restart: unless-stopped
     pull_policy: always
     healthcheck:
       test: ollama ps || exit 1
       interval: 10s
-    restart: unless-stopped
-    # ports:
-    #   - 11434:11434
-    volumes:
-      - ./data:/root/.ollama
     environment:
-      # - OLLAMA_HOST='0.0.0.0'  # uncomment to make ollama reachable by other computers on your network
-      - OLLAMA_KEEP_ALIVE=5m
-      - OLLAMA_FLASH_ATTENTION=0 # 1 is experimental as of 0.3.11
+      # OLLAMA_HOST: ${OLLAMA_HOST:-"0.0.0.0"}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-5m}
+      OLLAMA_FLASH_ATTENTION: ${OLLAMA_FLASH_ATTENTION:-0}
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - ollama-network
     deploy:
       resources:
         reservations:
@@ -22,9 +22,9 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
-    networks:
-      - ollama-network
-
+volumes:
+  ollama-data:
+    name: ollama-data
 networks:
   ollama-network:
     name: ollama-network

@@ -1,0 +1,8 @@
+services:
+  ollama:
+    networks:
+      - ollama-network
+
+networks:
+  ollama-network:
+    name: ollama-network

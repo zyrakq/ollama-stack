@@ -1,0 +1,30 @@
+services:
+  ollama:
+    container_name: ollama
+    image: ollama/ollama
+    restart: unless-stopped
+    pull_policy: always
+    healthcheck:
+      test: ollama ps || exit 1
+      interval: 10s
+    environment:
+      # OLLAMA_HOST: ${OLLAMA_HOST:-"0.0.0.0"}
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-5m}
+      OLLAMA_FLASH_ATTENTION: ${OLLAMA_FLASH_ATTENTION:-0}
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - ollama-workspace-network
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+volumes:
+  ollama-data:
+    name: ollama-data
+networks:
+  ollama-workspace-network:
+    external: true

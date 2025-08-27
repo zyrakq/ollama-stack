@@ -1,0 +1,8 @@
+services:
+  ollama:
+    networks:
+      - ollama-workspace-network
+
+networks:
+  ollama-workspace-network:
+    external: true
