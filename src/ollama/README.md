@@ -15,8 +15,14 @@ src/
 │   │   │   └── docker-compose.yml          # Dev container integration
 │   │   ├── forwarding/
 │   │   │   └── docker-compose.yml          # Development with port forwarding
-│   │   └── internal/
-│   │       └── docker-compose.yml          # Internal network only
+│   │   ├── internal/
+│   │   │   └── docker-compose.yml          # Internal network only
+│   │   ├── letsencrypt/
+│   │   │   ├── docker-compose.yml          # Let's Encrypt SSL automation
+│   │   │   └── .env.example                # SSL configuration variables
+│   │   └── step-ca/
+│   │       ├── docker-compose.yml          # Step CA private SSL automation
+│   │       └── .env.example                # Private CA configuration variables
 │   └── extensions/                         # Extension components
 │       ├── nvidia/                         # NVIDIA GPU support extension
 │       │   └── docker-compose.yml          # GPU acceleration configuration
@@ -28,9 +34,15 @@ src/
 │   ├── forwarding/
 │   │   ├── base/                 # Development + base configuration
 │   │   └── nvidia/               # Development + NVIDIA GPU support
-│   └── internal/
-│       ├── base/                 # Internal network + base configuration
-│       └── nvidia/               # Internal network + NVIDIA GPU support
+│   ├── internal/
+│   │   ├── base/                 # Internal network + base configuration
+│   │   └── nvidia/               # Internal network + NVIDIA GPU support
+│   ├── letsencrypt/
+│   │   ├── base/                 # Let's Encrypt SSL + base configuration
+│   │   └── nvidia/               # Let's Encrypt SSL + NVIDIA GPU support
+│   └── step-ca/
+│       ├── base/                 # Step CA private SSL + base configuration
+│       └── nvidia/               # Step CA private SSL + NVIDIA GPU support
 ├── build.sh                      # Build script
 └── README.md                     # This file
 ```
@@ -69,6 +81,12 @@ cd build/internal/base/
 
 # For internal network with NVIDIA GPU support
 cd build/internal/nvidia/
+
+# For Let's Encrypt SSL automation
+cd build/letsencrypt/base/
+
+# For Step CA private SSL automation
+cd build/step-ca/base/
 ```
 
 ### 3. Configure Environment
@@ -97,6 +115,8 @@ Access: `http://localhost:11434` (for forwarding mode)
 - **devcontainer**: Dev container integration for VS Code
 - **forwarding**: Development environment with port forwarding (11434)
 - **internal**: Internal network only, no port forwarding
+- **letsencrypt**: SSL automation with Let's Encrypt certificates via nginx-proxy
+- **step-ca**: Private SSL automation with Step CA certificates via nginx-proxy
 
 ### Extensions
 
@@ -112,6 +132,10 @@ Each environment can be combined with any extension:
 - `forwarding/nvidia` - Development with NVIDIA GPU support
 - `internal/base` - Internal network only
 - `internal/nvidia` - Internal network with NVIDIA GPU support
+- `letsencrypt/base` - Let's Encrypt SSL automation
+- `letsencrypt/nvidia` - Let's Encrypt SSL with NVIDIA GPU support
+- `step-ca/base` - Step CA private SSL automation
+- `step-ca/nvidia` - Step CA private SSL with NVIDIA GPU support
 
 ## 🔧 Environment Variables
 
@@ -124,6 +148,13 @@ Each environment can be combined with any extension:
 - `OLLAMA_HOST`: Bind address for Ollama server (default: "0.0.0.0")
 - `OLLAMA_KEEP_ALIVE`: How long to keep models loaded in memory (default: 5m)
 - `OLLAMA_FLASH_ATTENTION`: Enable flash attention optimization (default: 0)
+
+### SSL Configuration (letsencrypt/step-ca environments)
+
+- `VIRTUAL_PORT`: Port for nginx-proxy virtual host (default: 11434)
+- `VIRTUAL_HOST`: Domain name for the Ollama service (e.g., ollama.example.com)
+- `LETSENCRYPT_HOST`: Domain for SSL certificate (should match VIRTUAL_HOST)
+- `LETSENCRYPT_EMAIL`: Email for certificate registration and notifications
 
 ## 🤖 Using Ollama
 
@@ -160,6 +191,12 @@ Each environment can be combined with any extension:
 ```bash
 # For forwarding mode
 curl http://localhost:11434/api/generate -d '{
+  "model": "llama2",
+  "prompt": "Why is the sky blue?"
+}'
+
+# For SSL environments (letsencrypt/step-ca)
+curl https://ollama.example.com/api/generate -d '{
   "model": "llama2",
   "prompt": "Why is the sky blue?"
 }'
@@ -277,6 +314,8 @@ All component files follow the standard Docker Compose naming convention (`docke
 - **Development**: `ollama-network` (internal)
 - **Dev container**: `ollama-workspace-network` (external)
 - **Internal**: `ollama-network` (internal only)
+- **Let's Encrypt**: `letsencrypt-network` (external, connects to nginx-proxy)
+- **Step CA**: `step-ca-network` (external, connects to nginx-proxy with private CA)
 
 ## 🔒 Security
 
@@ -319,6 +358,12 @@ All component files follow the standard Docker Compose naming convention (`docke
 - Monitor resource usage: `docker stats ollama`
 - Consider using GPU acceleration for better performance
 - Adjust `OLLAMA_KEEP_ALIVE` for memory management
+
+**SSL Issues:**
+
+- Verify nginx-proxy is running and accessible
+- Check domain DNS resolution: `nslookup ollama.example.com`
+- Ensure external networks exist: `docker network ls | grep -E "(letsencrypt|step-ca)"`
 
 ## 📝 Notes
 
