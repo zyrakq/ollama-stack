@@ -4,9 +4,6 @@ services:
     image: ollama/ollama
     restart: unless-stopped
     pull_policy: always
-    healthcheck:
-      test: ollama ps || exit 1
-      interval: 10s
     environment:
       # OLLAMA_HOST: ${OLLAMA_HOST:-"0.0.0.0"}
       OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-5m}
@@ -15,6 +12,14 @@ services:
       VIRTUAL_HOST: ${VIRTUAL_HOST}
       LETSENCRYPT_HOST: ${LETSENCRYPT_HOST}
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: 3
+    healthcheck:
+      test: ollama ps || exit 1
+      interval: 10s
     volumes:
       - ollama-data:/root/.ollama
     networks:
